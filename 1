@@ -1,0 +1,159 @@
+__author__ = '375159507@qq.com'
+try:
+    from PySide import QtCore
+    from PySide import QtGui
+except ImportError:
+    from PyQt4 import QtCore
+    from PyQt4 import QtGui
+
+class PainArea(QtGui.QWidget):
+    def __init__(self):
+        super(PainArea,self).__init__()
+        self.setPalette(QtCore.Qt.white)
+        self.setAutoFillBackground(True)
+        self.setMinimumSize(400,400)
+
+        self.path = QtGui.QPainterPath()
+        self.path.addRect(150,150,100,100)
+        self.path.moveTo(100,100)
+        self.path.cubicTo(300,100,200,200,300,300)
+        self.path.cubicTo(100,300,200,200,100,100)
+
+        self.width = 1
+        self.pencolor = QtCore.Qt.red
+        self.brushcolor = QtCore.Qt.blue
+        self.rule = QtCore.Qt.OddEvenFill
+
+
+    def setFillRule(self,newrule):
+            self.rule = QtCore.Qt.FillRule(newrule)
+            self.update()
+
+    def setPenWidth(self,newwidth):
+            self.width = newwidth
+            self.update()
+
+    def setPenColor(self,newcolor):
+            self.pencolor = newcolor
+            self.update()
+
+    def setBrushColor(self,newcolor):
+            self.brushcolor = newcolor
+            self.update()
+
+    def paintEvent(self,e):
+            p = QtGui.QPainter(self)
+            self.path.setFillRule(self.rule)
+            pen = QtGui.QPen()
+            pen.setColor(self.pencolor)
+            pen.setWidth(self.width)
+            p.setPen(pen)
+            p.setBrush(self.brushcolor)
+
+            p.drawPath(self.path)
+
+
+class MainWindow(QtGui.QWidget):
+    def __init__(self):
+        super(MainWindow,self).__init__()
+        self.area = PainArea()
+        self.createCtrlWidget()
+        self.mainlayout()
+    def slotpenColor(self):
+        newcolor = QtGui.QColorDialog.getColor()
+        if newcolor:
+            self.penColorFrame.setPalette(newcolor)
+            self.area.setPenColor(newcolor)
+        else:
+            newcolor = QtCore.Qt.blue
+            self.area.setPenColor(newcolor)
+    def slotbrushColor(self):
+        newcolor = QtGui.QColorDialog.getColor()
+        if newcolor:
+            self.brushColorFrame.setPalette(newcolor)
+            self.area.setBrushColor(newcolor)
+        else:
+            newcolor = QtCore.Qt.blue
+            self.area.setBrushColor(newcolor)
+
+    def slotFill(self,indx):
+        activedIndx = indx
+        if activedIndx == -1:
+            return
+        setRule = self.fillRuleComBox.itemData(activedIndx)
+        self.area.setFillRule(setRule)
+    def slotPenWidth(self,width):
+        newwidth = width
+        if newwidth:
+            self.area.setPenWidth(newwidth)
+        else:
+            return
+
+    def createCtrlWidget(self):
+        self.penColorText = QtGui.QLabel("画笔颜色 :")
+        self.penColorFrame = QtGui.QFrame()
+        self.penColorFrame.setAutoFillBackground(True)
+        self.penColorFrame.setPalette(QtGui.QPalette(QtCore.Qt.red))
+        self.penColorPushButton = QtGui.QPushButton()
+        self.penColorPushButton.setText("更改")
+        self.penColorPushButton.clicked.connect(self.slotpenColor)
+
+        self.brushColorText = QtGui.QLabel("画刷颜色 :")
+        self.brushColorFrame = QtGui.QFrame()
+        self.brushColorFrame.setAutoFillBackground(True)
+        self.brushColorFrame.setPalette(QtGui.QPalette(QtCore.Qt.blue))
+        self.brushColorPushButton = QtGui.QPushButton("更改")
+        self.brushColorPushButton.clicked.connect(self.slotbrushColor)
+        self.fillRuleText = QtGui.QLabel("选择填充方式 :")
+        self.fillRuleComBox = QtGui.QComboBox()
+        self.fillRuleComBox.addItem("OldEven",QtCore.Qt.OddEvenFill)
+        self.fillRuleComBox.addItem("Winding",QtCore.Qt.WindingFill)
+        self.fillRuleComBox.currentIndexChanged.connect(self.slotFill)
+
+        self.penWidthText = QtGui.QLabel("画笔宽度 :")
+        self.penwidthspinBox = QtGui.QSpinBox()
+        self.penwidthspinBox.setRange(1,10)
+        self.penwidthslider = QtGui.QSlider(QtCore.Qt.Horizontal)
+        self.penwidthslider.setRange(1,10)
+        self.penwidthspinBox.valueChanged.connect(self.penwidthslider.setValue)
+        self.penwidthslider.valueChanged.connect(self.penwidthspinBox.setValue)
+        self.penwidthslider.valueChanged.connect(self.slotPenWidth)
+
+
+    def mainlayout(self):
+        self.rightLayout = QtGui.QGridLayout()
+        self.rightLayout.addWidget(self.penColorText,0,0)
+        self.rightLayout.addWidget(self.penColorFrame,0,1)
+        self.rightLayout.addWidget(self.penColorPushButton,0,2)
+        self.rightLayout.addWidget(self.brushColorText,1,0)
+        self.rightLayout.addWidget(self.brushColorFrame,1,1)
+        self.rightLayout.addWidget(self.brushColorPushButton,1,2)
+        self.rightLayout.addWidget(self.fillRuleText,2,0)
+        self.rightLayout.addWidget(self.fillRuleComBox,2,1)
+        self.rightLayout.addWidget(self.penWidthText,3,0)
+        self.rightLayout.addWidget(self.penwidthspinBox,3,1)
+        self.rightLayout.addWidget(self.penwidthslider,3,2)
+        self.rightLayout.rowStretch(10)
+
+        self.leftLayout = QtGui.QHBoxLayout()
+        self.leftLayout.addWidget(self.area)
+
+
+        self.mainLayout = QtGui.QHBoxLayout()
+        self.mainLayout.addLayout(self.leftLayout)
+        self.mainLayout.addLayout(self.rightLayout)
+
+        self.setLayout(self.mainLayout)
+
+
+if __name__ == "__main__":
+    import  sys
+    app = QtGui.QApplication(sys.argv)
+    mainwindow = MainWindow()
+    mainwindow.show()
+    sys.exit(app.exec_())
+
+
+
+
+
